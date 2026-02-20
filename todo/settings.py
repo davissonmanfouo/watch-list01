@@ -202,21 +202,25 @@ FRANCECONNECT_CLIENT_SECRET = os.environ.get(
 FRANCECONNECT_AUTHORIZE_URL = os.environ.get(
     "FRANCECONNECT_AUTHORIZE_URL",
     _read_shared_env_value("FRANCECONNECT_AUTHORIZE_URL")
-    or "https://fcp-low.integ01.dev-franceconnect.fr/api/v1/authorize",
+    or "https://fcp-low.integ01.dev-franceconnect.fr/api/v2/authorize",
 ).strip()
 FRANCECONNECT_TOKEN_URL = os.environ.get(
     "FRANCECONNECT_TOKEN_URL",
     _read_shared_env_value("FRANCECONNECT_TOKEN_URL")
-    or "https://fcp-low.integ01.dev-franceconnect.fr/api/v1/token",
+    or "https://fcp-low.integ01.dev-franceconnect.fr/api/v2/token",
 ).strip()
 FRANCECONNECT_USERINFO_URL = os.environ.get(
     "FRANCECONNECT_USERINFO_URL",
     _read_shared_env_value("FRANCECONNECT_USERINFO_URL")
-    or "https://fcp-low.integ01.dev-franceconnect.fr/api/v1/userinfo",
+    or "https://fcp-low.integ01.dev-franceconnect.fr/api/v2/userinfo",
 ).strip()
 FRANCECONNECT_SCOPE = os.environ.get(
     "FRANCECONNECT_SCOPE",
     _read_shared_env_value("FRANCECONNECT_SCOPE") or "openid profile email",
+).strip()
+FRANCECONNECT_ACR_VALUES = os.environ.get(
+    "FRANCECONNECT_ACR_VALUES",
+    _read_shared_env_value("FRANCECONNECT_ACR_VALUES") or "eidas1",
 ).strip()
 FRANCECONNECT_REDIRECT_URI = os.environ.get(
     "FRANCECONNECT_REDIRECT_URI",

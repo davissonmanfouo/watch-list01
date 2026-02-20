@@ -3,23 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Connexion</title>
+  <title>Inscription</title>
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap");
 
     :root {
-      --bg-1: #071d32;
-      --bg-2: #172554;
+      --bg-1: #042f2e;
+      --bg-2: #14532d;
       --panel: rgba(255, 255, 255, 0.1);
       --panel-strong: rgba(255, 255, 255, 0.16);
-      --line: rgba(148, 163, 184, 0.4);
+      --line: rgba(167, 243, 208, 0.35);
       --text: #f8fafc;
-      --muted: #cbd5e1;
+      --muted: #d1fae5;
       --danger-bg: rgba(239, 68, 68, 0.2);
       --danger-line: rgba(248, 113, 113, 0.55);
-      --accent: #22d3ee;
-      --accent-strong: #0284c7;
-      --fc: #000091;
+      --accent: #34d399;
+      --accent-strong: #10b981;
     }
 
     * {
@@ -32,21 +31,21 @@
       color: var(--text);
       font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at 10% 10%, #0ea5e9 0%, transparent 30%),
-        radial-gradient(circle at 85% 5%, #fb7185 0%, transparent 26%),
-        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+        radial-gradient(circle at 8% 10%, #2dd4bf 0%, transparent 28%),
+        radial-gradient(circle at 90% 8%, #facc15 0%, transparent 24%),
+        linear-gradient(140deg, var(--bg-1), var(--bg-2));
       display: grid;
       place-items: center;
       padding: 24px 16px;
     }
 
     .card {
-      width: min(520px, 100%);
+      width: min(560px, 100%);
       border: 1px solid var(--line);
       border-radius: 18px;
       background: var(--panel);
       backdrop-filter: blur(10px);
-      box-shadow: 0 18px 48px rgba(2, 6, 23, 0.32);
+      box-shadow: 0 18px 48px rgba(2, 6, 23, 0.35);
       padding: 22px;
     }
 
@@ -71,9 +70,10 @@
     }
 
     .required {
-      color: #fda4af;
+      color: #fecaca;
     }
 
+    input[type="text"],
     input[type="email"],
     input[type="password"] {
       width: 100%;
@@ -101,8 +101,16 @@
       padding: 0 12px;
     }
 
+    .checkbox-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
     .error {
-      color: #fecaca;
+      color: #fee2e2;
       font-size: 0.9rem;
       margin-top: 6px;
     }
@@ -116,21 +124,13 @@
       padding: 10px 12px;
     }
 
-    .remember {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 14px;
-      color: var(--muted);
-    }
-
     .primary-btn {
       width: 100%;
       border: 0;
       border-radius: 12px;
       padding: 11px 12px;
       background: linear-gradient(120deg, var(--accent), var(--accent-strong));
-      color: #082f49;
+      color: #052e16;
       font-weight: 700;
       cursor: pointer;
     }
@@ -140,56 +140,24 @@
       cursor: not-allowed;
     }
 
-    .social-login {
-      margin-top: 12px;
-    }
-
-    .fc-btn {
-      display: block;
-      text-decoration: none;
-      text-align: center;
-      border-radius: 12px;
-      border: 1px solid #000091;
-      padding: 11px 12px;
-      font-weight: 700;
-      background: var(--fc);
-      color: #fff;
-    }
-
-    .fc-btn:hover {
-      background: #1212ff;
-      border-color: #1212ff;
-    }
-
-    .links {
+    .back-link {
       margin-top: 14px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .links a {
-      color: #bae6fd;
+      color: #ecfccb;
+      display: inline-block;
       text-underline-offset: 3px;
     }
 
     :focus-visible {
-      outline: 3px solid #7dd3fc;
+      outline: 3px solid #86efac;
       outline-offset: 2px;
     }
   </style>
 </head>
 <body>
   <main class="card">
-    <h1>Connexion</h1>
-    <p class="sub">Retrouve ta watchlist et continue ton prochain visionnage.</p>
+    <h1>Créer un compte</h1>
+    <p class="sub">Enregistre-toi pour gérer ta watchlist personnelle.</p>
 
-    {% if messages %}
-      {% for message in messages %}
-        <div class="error-summary" role="status">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
     {% if form.non_field_errors %}
       <div class="error-summary" role="alert" aria-live="assertive">
         {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
@@ -198,7 +166,12 @@
 
     <form method="post" novalidate data-loading-form>
       {% csrf_token %}
-      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+      <div class="field">
+        <label for="id_username">Nom d'utilisateur <span class="required" aria-hidden="true">*</span></label>
+        <input id="id_username" type="text" name="username" required autocomplete="username" value="{{ form.username.value|default:'' }}" aria-describedby="username-error">
+        {% if form.username.errors %}<div id="username-error" class="error">{% for e in form.username.errors %}{{ e }}{% endfor %}</div>{% endif %}
+      </div>
 
       <div class="field">
         <label for="id_email">Email <span class="required" aria-hidden="true">*</span></label>
@@ -209,38 +182,34 @@
       <div class="field">
         <label for="id_password">Mot de passe <span class="required" aria-hidden="true">*</span></label>
         <div class="password-wrap">
-          <input id="id_password" type="password" name="password" required minlength="8" maxlength="128" autocomplete="current-password" aria-describedby="password-error">
+          <input id="id_password" type="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password" aria-describedby="password-error">
           <button class="toggle-btn" type="button" data-toggle-password data-target="id_password" aria-label="Afficher le mot de passe">Afficher</button>
         </div>
         {% if form.password.errors %}<div id="password-error" class="error">{% for e in form.password.errors %}{{ e }}{% endfor %}</div>{% endif %}
       </div>
 
-      <label class="remember" for="id_remember_me">
-        <input id="id_remember_me" type="checkbox" name="remember_me" {% if form.remember_me.value %}checked{% endif %}>
-        Se souvenir de moi
+      <div class="field">
+        <label for="id_password_confirm">Confirmer le mot de passe <span class="required" aria-hidden="true">*</span></label>
+        <div class="password-wrap">
+          <input id="id_password_confirm" type="password" name="password_confirm" required minlength="8" maxlength="128" autocomplete="new-password" aria-describedby="password-confirm-error">
+          <button class="toggle-btn" type="button" data-toggle-password data-target="id_password_confirm" aria-label="Afficher la confirmation du mot de passe">Afficher</button>
+        </div>
+        {% if form.password_confirm.errors %}<div id="password-confirm-error" class="error">{% for e in form.password_confirm.errors %}{{ e }}{% endfor %}</div>{% endif %}
+      </div>
+
+      <label class="checkbox-line" for="id_accept_tos">
+        <input id="id_accept_tos" type="checkbox" name="accept_tos" required {% if form.accept_tos.value %}checked{% endif %}>
+        J'accepte les CGU <span class="required" aria-hidden="true">*</span>
       </label>
+      {% if form.accept_tos.errors %}<div class="error">{% for e in form.accept_tos.errors %}{{ e }}{% endfor %}</div>{% endif %}
 
       <button class="primary-btn" type="submit">
-        <span data-btn-text>Se connecter</span>
+        <span data-btn-text>Créer mon compte</span>
         <span data-btn-loader hidden>Chargement...</span>
       </button>
     </form>
 
-    {% if franceconnect_enabled %}
-      <div class="social-login">
-        <a
-          class="fc-btn"
-          href="{% url 'franceconnect_login' %}{% if next %}?next={{ next|urlencode }}{% endif %}"
-        >
-          Se connecter avec FranceConnect
-        </a>
-      </div>
-    {% endif %}
-
-    <div class="links">
-      <a href="{% url 'register' %}">Créer un compte</a>
-      <a href="{% url 'forgot_password' %}">Mot de passe oublié ?</a>
-    </div>
+    <a class="back-link" href="{% url 'login' %}">Déjà inscrit ? Se connecter</a>
   </main>
 
   <script>
@@ -267,8 +236,8 @@
           btn.setAttribute("aria-label", isPassword ? "Masquer le mot de passe" : "Afficher le mot de passe");
         });
       });
-      var emailInput = document.getElementById("id_email");
-      if (emailInput) emailInput.focus();
+      var usernameInput = document.getElementById("id_username");
+      if (usernameInput) usernameInput.focus();
     })();
   </script>
 </body>

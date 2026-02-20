@@ -46,6 +46,7 @@ STREAMING_PROVIDERS = {
 }
 FRANCECONNECT_SESSION_STATE_KEY = "franceconnect_oauth_state"
 FRANCECONNECT_SESSION_NEXT_KEY = "franceconnect_oauth_next"
+FRANCECONNECT_SESSION_NONCE_KEY = "franceconnect_oauth_nonce"
 
 
 def _safe_next_url(request):
@@ -65,7 +66,7 @@ def _franceconnect_redirect_uri(request):
     configured_redirect_uri = getattr(settings, "FRANCECONNECT_REDIRECT_URI", "").strip()
     if configured_redirect_uri:
         return configured_redirect_uri
-    return request.build_absolute_uri(reverse("franceconnect_callback"))
+    return request.build_absolute_uri(reverse("franceconnect_callback_public"))
 
 
 def _normalize_username(value):
@@ -180,8 +181,10 @@ def franceconnect_login_view(request):
 
     next_url = _safe_next_url(request)
     state = secrets.token_urlsafe(24)
+    nonce = secrets.token_urlsafe(24)
     request.session[FRANCECONNECT_SESSION_STATE_KEY] = state
     request.session[FRANCECONNECT_SESSION_NEXT_KEY] = next_url or ""
+    request.session[FRANCECONNECT_SESSION_NONCE_KEY] = nonce
 
     params = {
         "response_type": "code",
@@ -189,6 +192,8 @@ def franceconnect_login_view(request):
         "scope": settings.FRANCECONNECT_SCOPE,
         "redirect_uri": _franceconnect_redirect_uri(request),
         "state": state,
+        "nonce": nonce,
+        "acr_values": getattr(settings, "FRANCECONNECT_ACR_VALUES", "eidas1"),
     }
     return redirect(f"{settings.FRANCECONNECT_AUTHORIZE_URL}?{urlencode(params)}")
 
@@ -199,6 +204,7 @@ def franceconnect_callback_view(request):
         return redirect("login")
 
     expected_state = request.session.pop(FRANCECONNECT_SESSION_STATE_KEY, None)
+    expected_nonce = request.session.pop(FRANCECONNECT_SESSION_NONCE_KEY, None)
     next_url = request.session.pop(FRANCECONNECT_SESSION_NEXT_KEY, "") or "list"
     returned_state = request.GET.get("state")
     auth_error = request.GET.get("error")
@@ -224,6 +230,7 @@ def franceconnect_callback_view(request):
             "client_id": settings.FRANCECONNECT_CLIENT_ID,
             "client_secret": settings.FRANCECONNECT_CLIENT_SECRET,
             "redirect_uri": _franceconnect_redirect_uri(request),
+            "nonce": expected_nonce or "",
         }
     ).encode("utf-8")
 
@@ -399,7 +406,13 @@ def _fetch_top_rated_series(provider_id, limit=10, excluded_series_ids=None):
                 continue
 
             excluded_ids.add(series_id)
-            collected_series.append({"id": series_id, "name": series_name})
+            collected_series.append(
+                {
+                    "id": series_id,
+                    "name": series_name,
+                    "poster_path": item.get("poster_path"),
+                }
+            )
             if len(collected_series) == limit:
                 break
 
@@ -464,6 +477,7 @@ def addProviderWatchlist(request, provider_slug):
                 "title": task_title,
                 "complete": False,
                 "provider_slug": provider_slug,
+                "poster_path": item.get("poster_path"),
             },
         )
         if created:

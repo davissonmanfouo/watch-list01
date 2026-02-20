@@ -8,7 +8,7 @@ Cette collection contient 4 appels GET pour récupérer des séries TV via l'API
 - Sélectionner l'environnement `dev`.
 - Renseigner `TMDB_READ_ACCESS_TOKEN` dans `environments/.env` (Read Access Token TMDB v4).
 - Le même fichier `environments/.env` est utilisé aussi par l'application Django (`watch-list`) pour TMDB + FranceConnect.
-- Pour tester FranceConnect en local, lancer Django sur le port `3000` (callback par défaut).
+- Pour tester FranceConnect en local, lancer Django sur le port `8000` (callback recommandé: `http://localhost:8000/callback`).
 - Comptes FranceConnect mock (mot de passe `123`): `test`, `avec_nom_dusage`, `nom_composé`.
 
 ## Appels inclus

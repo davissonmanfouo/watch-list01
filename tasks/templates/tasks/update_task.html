@@ -1,7 +1,174 @@
-<h3>Update task</h3>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modifier</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap");
 
-<form method="POST" action="">
-	{% csrf_token %}
-	{{ form }}
-	<input type="submit" name="Update Task">
-</form>
+    :root {
+      --bg-1: #111827;
+      --bg-2: #1e293b;
+      --panel: rgba(255, 255, 255, 0.11);
+      --line: rgba(148, 163, 184, 0.42);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --accent: #67e8f9;
+      --accent-strong: #0ea5e9;
+      --danger-bg: rgba(239, 68, 68, 0.2);
+      --danger-line: rgba(248, 113, 113, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 8% 8%, #06b6d4 0%, transparent 30%),
+        radial-gradient(circle at 92% 8%, #f97316 0%, transparent 24%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      width: min(560px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 48px rgba(2, 6, 23, 0.35);
+      padding: 22px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: clamp(1.75rem, 3vw, 2.1rem);
+    }
+
+    .sub {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: rgba(15, 23, 42, 0.58);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .checkbox-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+    }
+
+    .error {
+      color: #fee2e2;
+      font-size: 0.9rem;
+      margin-top: 6px;
+    }
+
+    .error-summary {
+      margin-bottom: 12px;
+      border: 1px solid var(--danger-line);
+      border-radius: 10px;
+      background: var(--danger-bg);
+      color: #fee2e2;
+      padding: 10px 12px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+      color: #082f49;
+    }
+
+    .btn-secondary {
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text);
+    }
+
+    @media (max-width: 640px) {
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    :focus-visible {
+      outline: 3px solid #67e8f9;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Modifier une entrée</h1>
+    <p class="sub">Mets à jour le titre ou son état de visionnage.</p>
+
+    {% if form.non_field_errors %}
+      <div class="error-summary" role="alert">
+        {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="POST" action="">
+      {% csrf_token %}
+      <div class="field">
+        <label for="{{ form.title.id_for_label }}">Titre</label>
+        {{ form.title }}
+        {% if form.title.errors %}<div class="error">{% for e in form.title.errors %}{{ e }}{% endfor %}</div>{% endif %}
+      </div>
+      <label class="checkbox-line" for="{{ form.complete.id_for_label }}">
+        {{ form.complete }}
+        Marquer comme vu
+      </label>
+      {% if form.complete.errors %}<div class="error">{% for e in form.complete.errors %}{{ e }}{% endfor %}</div>{% endif %}
+
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <a class="btn btn-secondary" href="{% url 'list' %}">Retour</a>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

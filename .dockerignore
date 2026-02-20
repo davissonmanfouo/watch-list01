@@ -1,0 +1,11 @@
+.git
+.gitignore
+.DS_Store
+__pycache__/
+*.py[cod]
+*.log
+*.sqlite3
+db.sqlite3
+.venv/
+venv/
+api/tmdb-streaming/environments/.env

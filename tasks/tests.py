@@ -162,7 +162,8 @@ class AuthFlowTest(TestCase):
         FRANCECONNECT_ENABLED=True,
         FRANCECONNECT_CLIENT_ID="client-id",
         FRANCECONNECT_CLIENT_SECRET="client-secret",
-        FRANCECONNECT_AUTHORIZE_URL="https://fc.example/api/v1/authorize",
+        FRANCECONNECT_AUTHORIZE_URL="https://fc.example/api/v2/authorize",
+        FRANCECONNECT_ACR_VALUES="eidas1",
     )
     def test_franceconnect_login_redirects_to_authorization_endpoint(self):
         response = self.client.get(reverse("franceconnect_login"), {"next": reverse("list")})
@@ -172,38 +173,43 @@ class AuthFlowTest(TestCase):
         query = parse_qs(parsed.query)
         self.assertEqual(parsed.scheme, "https")
         self.assertEqual(parsed.netloc, "fc.example")
-        self.assertEqual(parsed.path, "/api/v1/authorize")
+        self.assertEqual(parsed.path, "/api/v2/authorize")
         self.assertEqual(query["response_type"][0], "code")
         self.assertEqual(query["client_id"][0], "client-id")
         self.assertEqual(query["scope"][0], "openid profile email")
+        self.assertEqual(query["acr_values"][0], "eidas1")
         self.assertIn("state", query)
-        self.assertIn(reverse("franceconnect_callback"), query["redirect_uri"][0])
+        self.assertIn("nonce", query)
+        self.assertEqual(query["redirect_uri"][0], "http://localhost:3000/callback")
 
         session = self.client.session
         self.assertEqual(session["franceconnect_oauth_state"], query["state"][0])
         self.assertEqual(session["franceconnect_oauth_next"], reverse("list"))
+        self.assertEqual(session["franceconnect_oauth_nonce"], query["nonce"][0])
 
     @override_settings(
         FRANCECONNECT_ENABLED=True,
         FRANCECONNECT_CLIENT_ID="client-id",
         FRANCECONNECT_CLIENT_SECRET="client-secret",
-        FRANCECONNECT_TOKEN_URL="https://fc.example/api/v1/token",
-        FRANCECONNECT_USERINFO_URL="https://fc.example/api/v1/userinfo",
+        FRANCECONNECT_TOKEN_URL="https://fc.example/api/v2/token",
+        FRANCECONNECT_USERINFO_URL="https://fc.example/api/v2/userinfo",
         FRANCECONNECT_REDIRECT_URI="http://testserver/login/franceconnect/callback/",
     )
     def test_franceconnect_callback_logs_in_existing_user(self):
         session = self.client.session
         session["franceconnect_oauth_state"] = "state-123"
+        session["franceconnect_oauth_nonce"] = "nonce-123"
         session["franceconnect_oauth_next"] = reverse("list")
         session.save()
 
         def fake_urlopen(request, timeout=10):
-            if request.full_url == "https://fc.example/api/v1/token":
+            if request.full_url == "https://fc.example/api/v2/token":
                 self.assertIn(b"code=auth-code", request.data)
+                self.assertIn(b"nonce=nonce-123", request.data)
                 return self._fake_oauth_response(
                     {"access_token": "token-123", "token_type": "Bearer"}
                 )
-            if request.full_url == "https://fc.example/api/v1/userinfo":
+            if request.full_url == "https://fc.example/api/v2/userinfo":
                 return self._fake_oauth_response({"sub": "fc-sub-1", "email": "john@example.com"})
             raise AssertionError(f"Unexpected URL called: {request.full_url}")
 
@@ -221,22 +227,24 @@ class AuthFlowTest(TestCase):
         FRANCECONNECT_ENABLED=True,
         FRANCECONNECT_CLIENT_ID="client-id",
         FRANCECONNECT_CLIENT_SECRET="client-secret",
-        FRANCECONNECT_TOKEN_URL="https://fc.example/api/v1/token",
-        FRANCECONNECT_USERINFO_URL="https://fc.example/api/v1/userinfo",
+        FRANCECONNECT_TOKEN_URL="https://fc.example/api/v2/token",
+        FRANCECONNECT_USERINFO_URL="https://fc.example/api/v2/userinfo",
         FRANCECONNECT_REDIRECT_URI="http://testserver/login/franceconnect/callback/",
     )
     def test_franceconnect_callback_creates_user_when_unknown(self):
         session = self.client.session
         session["franceconnect_oauth_state"] = "state-456"
+        session["franceconnect_oauth_nonce"] = "nonce-456"
         session["franceconnect_oauth_next"] = reverse("list")
         session.save()
 
         def fake_urlopen(request, timeout=10):
-            if request.full_url == "https://fc.example/api/v1/token":
+            if request.full_url == "https://fc.example/api/v2/token":
+                self.assertIn(b"nonce=nonce-456", request.data)
                 return self._fake_oauth_response(
                     {"access_token": "token-456", "token_type": "Bearer"}
                 )
-            if request.full_url == "https://fc.example/api/v1/userinfo":
+            if request.full_url == "https://fc.example/api/v2/userinfo":
                 return self._fake_oauth_response(
                     {
                         "sub": "fc-sub-2",
@@ -402,6 +410,25 @@ class WatchlistImportTest(TestCase):
             Task.objects.filter(user=self.user_1, provider_service_id="8").count(), 10
         )
         self.assertEqual(Task.objects.filter(user=self.user_2).count(), 0)
+
+    def test_add_watchlist_saves_poster_and_renders_image(self):
+        payload = {
+            "results": [{"id": 42, "name": "Serie Imagee", "poster_path": "/poster-42.jpg"}],
+            "total_pages": 1,
+        }
+        self.client.force_login(self.user_1)
+        with patch("tasks.views.urlopen") as mocked_urlopen:
+            mocked_urlopen.return_value = self._fake_response(payload)
+            response = self.client.post(
+                reverse("add_watchlist_provider", kwargs={"provider_slug": "netflix"})
+            )
+
+        self.assertRedirects(response, reverse("list"))
+        task = Task.objects.get(user=self.user_1, tmdb_series_id=42)
+        self.assertEqual(task.poster_path, "/poster-42.jpg")
+
+        list_response = self.client.get(reverse("list"))
+        self.assertContains(list_response, "https://image.tmdb.org/t/p/w342/poster-42.jpg")
 
     def test_double_click_netflix_adds_20_distinct_series_for_same_user(self):
         self.client.force_login(self.user_1)

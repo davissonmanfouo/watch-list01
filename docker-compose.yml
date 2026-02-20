@@ -1,0 +1,18 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - api/tmdb-streaming/environments/.env
+    environment:
+      DEBUG: "true"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+      SESSION_COOKIE_SECURE: "false"
+      CSRF_COOKIE_SECURE: "false"
+      DJANGO_PORT: "8000"
+      FRANCECONNECT_REDIRECT_URI: "http://localhost:8000/callback"
+    volumes:
+      - .:/app
