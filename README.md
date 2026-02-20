@@ -60,9 +60,10 @@ docker compose up --build
 L'application est disponible sur `http://localhost:8000`.
 
 Notes:
-- Le conteneur exécute automatiquement `migrate` puis `seed_data` au démarrage.
+- Le conteneur exécute l'app avec **Gunicorn (WSGI)** en production (pas `runserver`).
+- Le conteneur exécute automatiquement `migrate` au démarrage.
+- `seed_data` est désactivé par défaut (`RUN_SEED=false`).
 - Les variables sont chargées depuis `api/tmdb-streaming/environments/.env` via `docker-compose.yml`.
-- Le code est monté en volume (`.:/app`) pour le dev.
 
 Commandes utiles:
 
